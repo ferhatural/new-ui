@@ -3,11 +3,13 @@
 import React, { ReactNode, useRef, useEffect, useState } from "react";
 import { useUIState, useActions } from "ai/rsc";
 import { AI } from "./actions";
+import Image from "next/image";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { BlueText } from "@/components/blue-text";
 import { LoadingDots } from "@/components/loading-dots";
 import { ProjectsView } from "@/components/projects-view";
 import { ProjectDetailView } from "@/components/project-detail-view";
+import { ImageSlider } from "@/components/slider";
 
 interface Project {
   id: string;
@@ -31,6 +33,8 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [projectsData, setProjectsData] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [isBlur, setIsBlur] = useState(true);
+  const [isSliding, setIsSliding] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -131,6 +135,14 @@ export default function Home() {
         projectsData
       );
       console.log("Main page: got AI response:", response);
+
+      if(response.type && response.type!='text') {
+        //setIsBlur(false);
+        setIsSliding(false);
+      }
+      if(response.tool && response.tool=='colors') {
+        setIsBlur(true);
+      }
 
       // Execute the AI's decision
       switch (response.type) {
@@ -246,9 +258,13 @@ export default function Home() {
 
   return (
     <div className="w-full h-screen bg-white dark:bg-zinc-900">
+      <main style={{ margin: 0, padding: 0 }}>
+      <ImageSlider isBlur={isBlur} isSliding={isSliding} />
+      {}
+      </main>
       <div
         ref={messagesContainerRef}
-        className="w-full h-[calc(100vh-5rem)] overflow-auto"
+        className="w-full h-screen overflow-auto absolute top-0 left-0"
       >
         {/* Show persistent tool if available */}
         {currentTool && (
@@ -274,13 +290,16 @@ export default function Home() {
         {/* If no tool, show welcome message or latest message */}
         {!currentTool && (
           <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">
-                CarvAI
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                Ask me anything about Carvist and our work, or
-                contact information
+            <div className="items-center text-center space-y-4">
+              <Image
+                src="/images/filli-logo.png"
+                alt="AI Assistant"
+                width={128}
+                height={128}
+                className="block mx-auto mb-4"
+              />
+              <p className="text-xl text-gray-700 dark:text-gray-400">
+                Renklerin akıllı dünyasına hoş geldiniz!
               </p>
             </div>
           </div>

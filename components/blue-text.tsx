@@ -31,7 +31,7 @@ export const BlueText = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div
-      className={`fixed bottom-20 left-0 right-0 z-[100] px-4 transition-opacity duration-500 ${
+      className={`fixed bottom-24 mb-10 left-0 right-0 z-[100] px-4 transition-opacity duration-500 ${
         isFading ? "opacity-0" : "opacity-100"
       }`}
     >

@@ -17,6 +17,8 @@ import { ContactsView } from "@/components/contacts-view";
 import { ProjectsView } from "@/components/projects-view";
 import { ProjectDetailView } from "@/components/project-detail-view";
 import { BlueText } from "@/components/blue-text";
+import { ColorsView } from "@/components/colors";
+import { ProductsView } from "@/components/products";
 
 export interface Hub {
   climate: Record<"low" | "high", number>;
@@ -89,14 +91,14 @@ const makeDecision = async (
   const result = await generateText({
     model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o"),
     temperature: 0.1,
-    system: `You are an AI assistant for a smart home automation system. 
+    system: `You are an AI assistant for Filliboya Web Site. You help users navigate tools and projects.
 
 AVAILABLE TOOLS:
-1. cameras - Security cameras and surveillance feeds. Contains live camera feeds, recordings, security monitoring.
-2. hub - Smart home control panel. Contains lights, temperature, locks, climate controls, device status.
-3. usage - Utility consumption data. Contains electricity, water, gas usage statistics and billing.
-4. contacts - Company contact information. Contains phone numbers, email addresses, office location, support details.
-5. projects - Project portfolio and showcase. Contains project titles, clients, descriptions, and images fetched from API.
+1. colors - All the colors that Filliboya offers. Contains color names, codes, and images.
+2. products - All the products that Filliboya offers. Contains product names, descriptions, images, and categories.
+3. blog - Different ideas about how to use Filliboya products. Contains blog titles, authors, dates, and content.
+4. services - Services offered by Filliboya. Contains service names, descriptions, and images.
+5. contact - Contact information for Filliboya. Contains email, phone number, and address.
 
 CURRENT STATE: ${
       currentTool
@@ -107,7 +109,7 @@ CURRENT STATE: ${
 YOUR JOB: Analyze the user query and decide what action to take. Return a JSON object with:
 {
   "action": "show_tool" | "same_tool" | "text_only" | "show_project_detail" | "show_related_projects",
-  "tool": "cameras" | "hub" | "usage" | "contacts" | "projects" | null,
+  "tool": "colors" | "products" | "services" | "contact" | "blog" | "painter-services" | null,
   "projectId": "string" | null,
   "relatedProjectIds": "string[]" | null,
   "response": "your response text here"
@@ -119,6 +121,16 @@ DECISION RULES:
 - If query asks for a specific project by ID (e.g., "show project 20", "project 15") → action: "show_project_detail", projectId: "20"
 - If query mentions projects by name/client/category and you can find related projects → action: "show_related_projects", relatedProjectIds: ["id1", "id2", "id3"]
 - If query is general/conversational (not tool-related) → action: "text_only", tool: null
+
+If the user asks for a paint product try to find out which type of paint they are looking for (e.g., interior, exterior, etc.) and return the relevant products.
+
+2025 Yılı Renkleri: 
+Kaktüs 90
+Kaktüs 50
+Kıvılcım 90
+Aydan
+Hasır 40
+Kozmik 115
 
 IMPORTANT: When finding related projects, look at the AVAILABLE PROJECTS DATA above and return the actual project IDs that match the user's query. Do NOT use hardcoded IDs.
 
@@ -212,6 +224,14 @@ const sendMessage = async (
       switch (decision.tool) {
         case "cameras":
           toolComponent = <CameraView />;
+          break;
+        case "colors":
+          console.log("Server: Showing colors tool");
+          toolComponent = <ColorsView />;
+          break;
+        case "products":
+          console.log("Server: Showing products tool");
+          toolComponent = <ProductsView />;
           break;
         case "hub":
           toolComponent = <HubView hub={hub} />;

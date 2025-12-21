@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Camera, Home, BarChart3 } from "lucide-react";
+import { Mail, Camera, Home, BarChart3, ShoppingBag, Contact, MapIcon, PaintBucketIcon, Brush, LucideBrush, BrushCleaning, PencilLine, LucidePaintBucket, TagIcon } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -21,13 +21,11 @@ export function BottomNavigation({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const suggestedActions = [
-    { title: "Show me your projects", action: "show projects" },
-    {
-      title: "Who is Carvist?",
-      action: "show about",
-    },
-    { title: "How to reach you?", action: "show contact" },
-    { title: "Help", action: "help me get started" },
+    { title: "Yılın renkleri neler?", action: "Yılın renkleri" },
+    { title: "Renk seçmek istiyorum", action: "show projects"},
+    { title: "Nasıl iletişim kurabiliriz?", action: "show contact" },
+    { title: "Boya ustası lazım", action: "find a painter" },
+    { title: "Odamı boyamak istiyorum", action: "odamı boyamak istiyorum" }
   ];
 
   const handleAIResponse = async (userMessage: string) => {
@@ -56,10 +54,10 @@ export function BottomNavigation({
   return (
     <>
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md dark:bg-zinc-900/80">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/20 backdrop-blur-sm pt-3 dark:bg-zinc-900/80">
         <div className="w-full px-4">
           {/* Suggested Actions - Badge style above navigation */}
-          {!hasMessages && !isProcessing && (
+          { (
             <div className="py-2">
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestedActions.map((action, index) => (
@@ -92,7 +90,7 @@ export function BottomNavigation({
                         className="inline-flex h-8 px-2 text-xs font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 whitespace-nowrap"
                       >
                         <Camera className="h-3 w-3 mr-1" />
-                        <span>Cameras</span>
+                        <span>Renkler</span>
                       </button>
 
                       <button
@@ -103,7 +101,7 @@ export function BottomNavigation({
                         className="inline-flex h-8 px-2 text-xs font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 whitespace-nowrap"
                       >
                         <Home className="h-3 w-3 mr-1" />
-                        <span>Hub</span>
+                        <span>Hubby</span>
                       </button>
 
                       <button
@@ -238,7 +236,7 @@ export function BottomNavigation({
             <div className="flex-shrink-0">
               <div className="flex items-center">
                 <Image
-                  src="/logo.png"
+                  src="/images/filli-logo.png"
                   alt="AI Assistant"
                   width={120}
                   height={32}
@@ -255,7 +253,7 @@ export function BottomNavigation({
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ask me anything...."
+                    placeholder="Ne yapmak istersiniz?"
                     className="w-full h-10 px-4 pr-12 text-sm bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
                     disabled={isProcessing}
                     autoCorrect="off"
@@ -294,40 +292,52 @@ export function BottomNavigation({
               <div className="flex items-center space-x-2">
                 {/* Quick Action Buttons */}
                 <button
-                  onClick={() => handleAIResponse("show cameras")}
+                  onClick={() => handleAIResponse("tüm renkleri göster")}
                   className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
-                  <Camera className="h-4 w-4 mr-2" />
-                  <span>Cameras</span>
+                  <PaintBucketIcon className="h-4 w-4 mr-2" />
+                  <span>Renkler</span>
                 </button>
 
                 <button
-                  onClick={() => handleAIResponse("show hub")}
+                  onClick={() => handleAIResponse("show products")}
                   className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
-                  <Home className="h-4 w-4 mr-2" />
-                  <span>Hub</span>
+                  <TagIcon className="h-4 w-4 mr-2" />
+                  <span>Ürünler</span>
                 </button>
 
                 <button
                   onClick={() => handleAIResponse("show usage")}
                   className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  <span>Usage</span>
+                  <PencilLine className="h-4 w-4 mr-2" />
+                  <span>İlham Veren Fikirler</span>
                 </button>
 
                 <button
                   onClick={() => handleAIResponse("contact support")}
                   className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
-                  <Mail className="h-4 w-4 mr-2" />
-                  <span>Contact</span>
+                  <BrushCleaning className="h-4 w-4 mr-2" />
+                  <span>Hizmetler</span>
                 </button>
 
-                <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-2" />
+                <button
+                  onClick={() => handleAIResponse("contact support")}
+                  className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <MapIcon className="h-4 w-4 mr-2" />
+                  <span>İletişim</span>
+                </button>
 
-                <ThemeToggle />
+                <button
+                  onClick={() => handleAIResponse("contact support")}
+                  className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  <span>Sepetim</span>
+                </button>
               </div>
             </div>
           </nav>

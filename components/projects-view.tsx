@@ -118,13 +118,10 @@ export const ProjectsView = ({
   }
 
   return (
-    <div className="w-full h-full bg-white dark:bg-zinc-900 p-4 overflow-auto">
+    <div className="w-full h-full p-4 overflow-auto">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-6 text-center">
-          Projects Portfolio
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20">
           {filteredProjects.map((project, index) => (
             <motion.div
               key={project.id}
@@ -166,9 +163,6 @@ export const ProjectsView = ({
                 <h3 className="text-sm font-semibold text-zinc-900 dark:text-white line-clamp-2 text-center mb-1">
                   {project.title}
                 </h3>
-                <p className="text-xs text-blue-600 dark:text-blue-400 text-center">
-                  {project.category}
-                </p>
               </div>
             </motion.div>
           ))}
