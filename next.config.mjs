@@ -2,7 +2,7 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      allowedOrigins: ["filli.carvist.org"],
+      allowedOrigins: ["filli.carvist.org", "185.48.182.25"],
     },
   },
   images: {
