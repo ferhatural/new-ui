@@ -34,7 +34,7 @@ export const ColorsView: React.FC = () => {
         style={{ marginLeft: 160 }} // Sağdaki palet kadar boşluk bırak
       >
         <img
-            className="rounded-2xl shadow-lg"
+          className="rounded-2xl shadow-lg"
           src={images[currentImg]}
           alt="Salon"
           onClick={handleImageClick}
@@ -55,7 +55,7 @@ export const ColorsView: React.FC = () => {
             onClick={() => setBgColor(color.code)}
           >
             <div
-                className="rounded-full mb-2"
+              className="rounded-full mb-2"
               style={{
                 backgroundColor: color.code,
                 width: 52,
@@ -63,7 +63,7 @@ export const ColorsView: React.FC = () => {
                 border: "2px solid #dfdfdf",
               }}
             />
-            <span className="text-sm font-medium">{color.name}</span>
+            <span className="text-sm font-medium text-neutral-500">{color.name}</span>
           </div>
         ))}
       </div>
