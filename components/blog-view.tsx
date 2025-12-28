@@ -56,11 +56,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
 
     return (
         <div className="w-full h-full overflow-y-auto p-4 pb-24">
-            <h2 className="text-2xl font-bold mb-6 text-zinc-800 dark:text-zinc-100 px-2 sticky top-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md py-4 z-10">
-                İlham Veren Fikirler
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 pt-4">
                 {visiblePosts.map((post, index) => (
                     <div
                         key={index}
@@ -130,10 +126,6 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                         <div className="p-6 md:p-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">{selectedPost.title}</h2>
                             <div className="prose dark:prose-invert max-w-none">
-                                <p className="text-lg text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">
-                                    {selectedPost.short_desc}
-                                </p>
-
                                 {isLoadingDetail ? (
                                     <div className="py-12 flex justify-center">
                                         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -141,7 +133,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                                 ) : (
                                     selectedPost.content && (
                                         <div
-                                            className="mt-6 text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-4"
+                                            className="text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-4"
                                             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
                                         />
                                     )
