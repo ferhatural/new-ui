@@ -14,7 +14,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
     const handleLoadMore = () => {
-        setVisibleCount(prev => prev + 6);
+        setVisibleCount((prev: number) => prev + 6);
     };
 
     // Function to handle post selection
@@ -106,7 +106,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedPost(null)}>
                     <div
                         className="bg-white dark:bg-zinc-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
-                        onClick={e => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     >
                         <div className="relative h-64 w-full">
                             <Image
