@@ -131,16 +131,15 @@ export default function Home() {
       // Send message with current tool state and projects data to AI for decision making
       const response = await sendMessageWithContext(
         userMessage,
-        currentToolType,
-        projectsData
+        currentToolType
       );
       console.log("Main page: got AI response:", response);
 
-      if(response.type && response.type!='text') {
+      if (response.type && response.type != 'text') {
         //setIsBlur(false);
         setIsSliding(false);
       }
-      if(response.tool && response.tool=='colors') {
+      if (response.tool && response.tool == 'colors') {
         setIsBlur(true);
       }
 
@@ -259,8 +258,8 @@ export default function Home() {
   return (
     <div className="w-full h-screen bg-white dark:bg-zinc-900">
       <main style={{ margin: 0, padding: 0 }}>
-      <ImageSlider isBlur={isBlur} isSliding={isSliding} />
-      {}
+        <ImageSlider isBlur={isBlur} isSliding={isSliding} />
+        { }
       </main>
       <div
         ref={messagesContainerRef}

@@ -39,60 +39,106 @@ let hub: Hub = {
   locks: [{ name: "back door", isLocked: true }],
 };
 
+import { ALL_COLORS } from "@/lib/colors";
+
+// Lightweight intent analysis to determine required context
+const analyzeIntent = async (query: string): Promise<{ needsProjects: boolean; needsColors: boolean }> => {
+  try {
+    const result = await generateText({
+      model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o"),
+      temperature: 0,
+      system: `You are an intent classifier. Analyze the user query to determine if it requires specific data context.
+Return a JSON object with:
+- "needsProjects": true if user asks about portfolio, case studies, specific project details, or client work.
+- "needsColors": true if user asks about paint colors, recommendations, suggestions for room painting, or specific color names.
+
+Examples:
+"Show me office projects" -> {"needsProjects": true, "needsColors": false}
+"What color should I paint my dark room?" -> {"needsProjects": false, "needsColors": true}
+"Contact info" -> {"needsProjects": false, "needsColors": false}
+"Show me green projects" -> {"needsProjects": true, "needsColors": true} (could be both)
+
+Respond ONLY with valid JSON.`,
+      prompt: query,
+    });
+
+    const intent = JSON.parse(result.text);
+    return {
+      needsProjects: intent.needsProjects || false,
+      needsColors: intent.needsColors || false,
+    };
+  } catch (error) {
+    console.error("Intent analysis failed:", error);
+    // Fallback: err on the side of caution and include data if unsure, or exclude to be safe.
+    // Let's assume false to avoid crashes, or check keywords manually.
+    const lowerQuery = query.toLowerCase();
+    return {
+      needsProjects: lowerQuery.includes("project") || lowerQuery.includes("proje") || lowerQuery.includes("ofis") || lowerQuery.includes("villa"),
+      needsColors: lowerQuery.includes("color") || lowerQuery.includes("renk") || lowerQuery.includes("boya") || lowerQuery.includes("paint"),
+    };
+  }
+};
+
 // AI-driven decision making function
 const makeDecision = async (
   userQuery: string,
   currentTool: string | null,
-  projectsData: any[] = []
+  // projectsData arg is deprecated but kept for signature compatibility if needed, though we won't use it from client
+  _unusedClientData: any[] = []
 ) => {
   "use server";
 
-  // Fetch projects data directly on server side if not provided
-  let projectsToUse = projectsData;
-  if (projectsData.length === 0) {
+  // 1. Analyze Intent
+  const intent = await analyzeIntent(userQuery);
+  console.log("Server: Intent Analysis:", intent);
+
+  // 2. Prepare Contexts based on Intent
+
+  // -- Projects Context --
+  let projectsContext = "";
+  if (intent.needsProjects) {
+    let projectsToUse = [];
     try {
-      console.log("Server: Fetching projects data directly...");
+      console.log("Server: Fetching projects data for context...");
       const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
         }/api/projects`
       );
       if (response.ok) {
         const data = await response.json();
         projectsToUse = data.projects || [];
-        console.log(
-          "Server: Fetched",
-          projectsToUse.length,
-          "projects directly"
-        );
       }
     } catch (error) {
       console.error("Server: Error fetching projects:", error);
     }
+
+    if (projectsToUse.length > 0) {
+      projectsContext = `\n\nAVAILABLE PROJECTS DATA:\n${projectsToUse
+        .map(
+          (project: any) =>
+            `ID: ${project.id}, Title: "${project.title}", Client: "${project.client
+            }", Category: "${project.category
+            }", Description: "${project.description.substring(0, 100)}..."`
+        )
+        .join("\n")}`;
+    }
   }
 
-  // Create projects context for the AI
-  const projectsContext =
-    projectsToUse.length > 0
-      ? `\n\nAVAILABLE PROJECTS DATA:\n${projectsToUse
-          .map(
-            (project) =>
-              `ID: ${project.id}, Title: "${project.title}", Client: "${
-                project.client
-              }", Category: "${
-                project.category
-              }", Description: "${project.description.substring(0, 100)}..."`
-          )
-          .join("\n")}`
-      : "";
+  // -- Colors Context --
+  let colorsContext = "";
+  if (intent.needsColors) {
+    colorsContext = `\n\nAVAILABLE COLORS:\n${ALL_COLORS.map(
+      (c) => `- ${c.name} (Code: ${c.code})`
+    ).join("\n")}`;
+  }
 
-  console.log("Server: Projects context being sent to LLM:", projectsContext);
+  console.log("Server: Contexts prepared. Projects:", !!projectsContext, "Colors:", !!colorsContext);
 
   const result = await generateText({
     model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o"),
     temperature: 0.1,
     system: `You are an AI assistant for Filliboya Web Site. You help users navigate tools and projects.
-
+    
 AVAILABLE TOOLS:
 1. colors - All the colors that Filliboya offers. Contains color names, codes, and images.
 2. products - All the products that Filliboya offers. Contains product names, descriptions, images, and categories.
@@ -100,16 +146,15 @@ AVAILABLE TOOLS:
 4. services - Services offered by Filliboya. Contains service names, descriptions, and images.
 5. contact - Contact information for Filliboya. Contains email, phone number, and address.
 
-CURRENT STATE: ${
-      currentTool
+CURRENT STATE: ${currentTool
         ? `Currently displaying: ${currentTool}`
         : "No tool currently displayed"
-    }${projectsContext}
+      }${projectsContext}${colorsContext}
 
 YOUR JOB: Analyze the user query and decide what action to take. Return a JSON object with:
 {
   "action": "show_tool" | "same_tool" | "text_only" | "show_project_detail" | "show_related_projects",
-  "tool": "colors" | "products" | "services" | "contact" | "blog" | "painter-services" | null,
+  "tool": "colors" | "products" | "services" | "contact" | "blog" | "painter-services" | null,
   "projectId": "string" | null,
   "relatedProjectIds": "string[]" | null,
   "response": "your response text here"
@@ -122,15 +167,8 @@ DECISION RULES:
 - If query mentions projects by name/client/category and you can find related projects → action: "show_related_projects", relatedProjectIds: ["id1", "id2", "id3"]
 - If query is general/conversational (not tool-related) → action: "text_only", tool: null
 
+If the user asks for color advice or specific colors, use the AVAILABLE COLORS list to make recommendations.
 If the user asks for a paint product try to find out which type of paint they are looking for (e.g., interior, exterior, etc.) and return the relevant products.
-
-2025 Yılı Renkleri: 
-Kaktüs 90
-Kaktüs 50
-Kıvılcım 90
-Aydan
-Hasır 40
-Kozmik 115
 
 IMPORTANT: When finding related projects, look at the AVAILABLE PROJECTS DATA above and return the actual project IDs that match the user's query. Do NOT use hardcoded IDs.
 
@@ -140,10 +178,8 @@ Query: "show projects" + Current: null → {"action": "show_tool", "tool": "proj
 Query: "show project 20" + Current: null → {"action": "show_project_detail", "tool": null, "projectId": "20", "relatedProjectIds": null, "response": "Here are the details for project 20"}
 Query: "project 15" + Current: null → {"action": "show_project_detail", "tool": null, "projectId": "15", "relatedProjectIds": null, "response": "Here are the details for project 15"}
 Query: "tell me about Filli Boya projects" + Current: null → {"action": "show_related_projects", "tool": null, "projectId": null, "relatedProjectIds": ["19"], "response": "Here are the Filli Boya projects from our portfolio"}
-Query: "show me e-commerce projects" + Current: null → {"action": "show_related_projects", "tool": null, "projectId": null, "relatedProjectIds": ["16", "9"], "response": "Here are the e-commerce projects from our portfolio"}
 Query: "what is your email" + Current: null → {"action": "show_tool", "tool": "contacts", "projectId": null, "relatedProjectIds": null, "response": "You can find our contact information here"}
-Query: "turn on lights" + Current: null → {"action": "show_tool", "tool": "hub", "projectId": null, "relatedProjectIds": null, "response": "Here are your smart home controls"}
-Query: "show cameras" + Current: "cameras" → {"action": "same_tool", "tool": null, "projectId": null, "relatedProjectIds": null, "response": "The security cameras are already displayed"}
+Query: "show me green colors" (if colors in context) -> {"action": "text_only", "tool": "colors", "response": "Here are some green options: Kaktüs 90, Kaktüs 50..."}
 Query: "what is AI" + Current: "cameras" → {"action": "text_only", "tool": null, "projectId": null, "relatedProjectIds": null, "response": "AI stands for Artificial Intelligence..."}
 
 Always respond with valid JSON only. No other text.`,
