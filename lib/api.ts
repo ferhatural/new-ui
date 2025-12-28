@@ -38,10 +38,11 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
 }
 
 export async function fetchBlogDetail(id: string): Promise<BlogPost | null> {
+    console.log("Fetching blog detail for id:", id);
     try {
         const response = await fetch("https://filliboya.com/api.php", {
             method: "POST",
-            body: JSON.stringify({ job: "get_blog_details", id }),
+            body: JSON.stringify({ job: "get_blog_details", id: id }),
             headers: {
                 "Content-Type": "application/json",
             },
