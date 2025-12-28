@@ -22,7 +22,7 @@ export function BottomNavigation({
 
   const suggestedActions = [
     { title: "Yılın renkleri neler?", action: "Yılın renkleri" },
-    { title: "Renk seçmek istiyorum", action: "show projects"},
+    { title: "Renk seçmek istiyorum", action: "show colors" },
     { title: "Nasıl iletişim kurabiliriz?", action: "show contact" },
     { title: "Boya ustası lazım", action: "find a painter" },
     { title: "Odamı boyamak istiyorum", action: "odamı boyamak istiyorum" }
@@ -57,7 +57,7 @@ export function BottomNavigation({
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/20 backdrop-blur-sm pt-3 dark:bg-zinc-900/80">
         <div className="w-full px-4">
           {/* Suggested Actions - Badge style above navigation */}
-          { (
+          {(
             <div className="py-2">
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestedActions.map((action, index) => (
