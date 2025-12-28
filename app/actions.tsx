@@ -40,9 +40,11 @@ let hub: Hub = {
 };
 
 import { ALL_COLORS } from "@/lib/colors";
+import { fetchBlogPosts } from "@/lib/api";
+import { BlogView } from "@/components/blog-view";
 
 // Lightweight intent analysis to determine required context
-const analyzeIntent = async (query: string): Promise<{ needsProjects: boolean; needsColors: boolean }> => {
+const analyzeIntent = async (query: string): Promise<{ needsProjects: boolean; needsColors: boolean; needsBlog: boolean }> => {
   try {
     const result = await generateText({
       model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o"),
@@ -51,12 +53,13 @@ const analyzeIntent = async (query: string): Promise<{ needsProjects: boolean; n
 Return a JSON object with:
 - "needsProjects": true if user asks about portfolio, case studies, specific project details, or client work.
 - "needsColors": true if user asks about paint colors, recommendations, suggestions for room painting, or specific color names.
+- "needsBlog": true if user asks for inspiration, ideas, blog posts, decoration tips, "ilham veren", "fikir", "garden", "flowers".
 
 Examples:
-"Show me office projects" -> {"needsProjects": true, "needsColors": false}
-"What color should I paint my dark room?" -> {"needsProjects": false, "needsColors": true}
-"Contact info" -> {"needsProjects": false, "needsColors": false}
-"Show me green projects" -> {"needsProjects": true, "needsColors": true} (could be both)
+"Show me office projects" -> {"needsProjects": true, "needsColors": false, "needsBlog": false}
+"What color should I paint my dark room?" -> {"needsProjects": false, "needsColors": true, "needsBlog": false}
+"Give me some decoration ideas" -> {"needsProjects": false, "needsColors": false, "needsBlog": true}
+"Show me green projects" -> {"needsProjects": true, "needsColors": true, "needsBlog": false}
 
 Respond ONLY with valid JSON.`,
       prompt: query,
@@ -66,6 +69,7 @@ Respond ONLY with valid JSON.`,
     return {
       needsProjects: intent.needsProjects || false,
       needsColors: intent.needsColors || false,
+      needsBlog: intent.needsBlog || false,
     };
   } catch (error) {
     console.error("Intent analysis failed:", error);
@@ -75,6 +79,7 @@ Respond ONLY with valid JSON.`,
     return {
       needsProjects: lowerQuery.includes("project") || lowerQuery.includes("proje") || lowerQuery.includes("ofis") || lowerQuery.includes("villa"),
       needsColors: lowerQuery.includes("color") || lowerQuery.includes("renk") || lowerQuery.includes("boya") || lowerQuery.includes("paint"),
+      needsBlog: lowerQuery.includes("idea") || lowerQuery.includes("fikir") || lowerQuery.includes("blog") || lowerQuery.includes("ilham"),
     };
   }
 };
@@ -125,6 +130,7 @@ const makeDecision = async (
   }
 
   // -- Colors Context --
+  // -- Colors Context --
   let colorsContext = "";
   if (intent.needsColors) {
     colorsContext = `\n\nAVAILABLE COLORS:\n${ALL_COLORS.map(
@@ -132,7 +138,28 @@ const makeDecision = async (
     ).join("\n")}`;
   }
 
-  console.log("Server: Contexts prepared. Projects:", !!projectsContext, "Colors:", !!colorsContext);
+  // -- Blog Context --
+  let blogContext = "";
+  if (intent.needsBlog) {
+    console.log("Server: Fetching blog posts for context...");
+    const blogPosts = await fetchBlogPosts();
+    if (blogPosts.length > 0) {
+      blogContext = `\n\nAVAILABLE BLOG POSTS (INSPIRATION IDEAS):\n${blogPosts
+        .slice(0, 5) // Limit context to first 5 posts to save tokens
+        .map(
+          (post: any) =>
+            `- Title: "${post.title}", Desc: "${post.short_desc.substring(0, 100)}..."`
+        )
+        .join("\n")}`;
+    }
+  }
+
+  console.log(
+    "Server: Contexts prepared.",
+    "Projects:", !!projectsContext,
+    "Colors:", !!colorsContext,
+    "Blog:", !!blogContext
+  );
 
   const result = await generateText({
     model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o"),
@@ -142,14 +169,14 @@ const makeDecision = async (
 AVAILABLE TOOLS:
 1. colors - All the colors that Filliboya offers. Contains color names, codes, and images.
 2. products - All the products that Filliboya offers. Contains product names, descriptions, images, and categories.
-3. blog - Different ideas about how to use Filliboya products. Contains blog titles, authors, dates, and content.
+3. blog - "Ilham Veren Fikirler" (Inspiration Ideas). Contains blog titles, authors, dates, and content about decoration, flowers, home application etc.
 4. services - Services offered by Filliboya. Contains service names, descriptions, and images.
 5. contact - Contact information for Filliboya. Contains email, phone number, and address.
 
 CURRENT STATE: ${currentTool
         ? `Currently displaying: ${currentTool}`
         : "No tool currently displayed"
-      }${projectsContext}${colorsContext}
+      }${projectsContext}${colorsContext}${blogContext}
 
 YOUR JOB: Analyze the user query and decide what action to take. Return a JSON object with:
 {
@@ -165,6 +192,7 @@ DECISION RULES:
 - If query asks for a tool that IS currently displayed → action: "same_tool", tool: null  
 - If query asks for a specific project by ID (e.g., "show project 20", "project 15") → action: "show_project_detail", projectId: "20"
 - If query mentions projects by name/client/category and you can find related projects → action: "show_related_projects", relatedProjectIds: ["id1", "id2", "id3"]
+- If query asks for inspiration, decoration ideas, or blog posts → action: "show_tool", tool: "blog"
 - If query is general/conversational (not tool-related) → action: "text_only", tool: null
 
 If the user asks for color advice or specific colors, use the AVAILABLE COLORS list to make recommendations.
@@ -180,6 +208,7 @@ Query: "project 15" + Current: null → {"action": "show_project_detail", "tool"
 Query: "tell me about Filli Boya projects" + Current: null → {"action": "show_related_projects", "tool": null, "projectId": null, "relatedProjectIds": ["19"], "response": "Here are the Filli Boya projects from our portfolio"}
 Query: "what is your email" + Current: null → {"action": "show_tool", "tool": "contacts", "projectId": null, "relatedProjectIds": null, "response": "You can find our contact information here"}
 Query: "show me green colors" (if colors in context) -> {"action": "text_only", "tool": "colors", "response": "Here are some green options: Kaktüs 90, Kaktüs 50..."}
+Query: "I need inspiration for my living room" -> {"action": "show_tool", "tool": "blog", "response": "Here are some inspiration ideas for your living room."}
 Query: "what is AI" + Current: "cameras" → {"action": "text_only", "tool": null, "projectId": null, "relatedProjectIds": null, "response": "AI stands for Artificial Intelligence..."}
 
 Always respond with valid JSON only. No other text.`,
@@ -280,6 +309,11 @@ const sendMessage = async (
           break;
         case "projects":
           toolComponent = <ProjectsView />;
+          break;
+        case "blog":
+          // Fetch blog posts if not already fetched (or re-fetch, it's cheap)
+          const blogPosts = await fetchBlogPosts();
+          toolComponent = <BlogView posts={blogPosts} />;
           break;
         default:
           toolComponent = <BlueText>{decision.response}</BlueText>;
