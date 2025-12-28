@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 
 export const ColorsView: React.FC = () => {
   const colors = [
@@ -30,21 +31,22 @@ export const ColorsView: React.FC = () => {
     >
       {/* Ortadaki büyük görsel */}
       <div
-        className="flex-1 flex justify-center items-center"
+        className="flex-1 flex justify-center items-center relative h-[80vh]"
         style={{ marginLeft: 160 }} // Sağdaki palet kadar boşluk bırak
       >
-        <img
-          className="rounded-2xl shadow-lg"
-          src={images[currentImg]}
-          alt="Salon"
-          onClick={handleImageClick}
-          style={{
-            maxWidth: "80%",
-            maxHeight: "80vh",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            cursor: "pointer",
-          }}
-        />
+        <div className="relative w-[80%] h-full">
+          <Image
+            className="rounded-2xl shadow-lg object-contain"
+            src={images[currentImg]}
+            alt="Salon"
+            fill
+            onClick={handleImageClick}
+            style={{
+              cursor: "pointer",
+            }}
+            sizes="(max-width: 1200px) 100vw, 80vw"
+          />
+        </div>
       </div>
       {/* Sağdaki renk paleti */}
       <div className="flex flex-col items-center gap-6 p-8 bg-white/70 rounded-l-2xl shadow-lg min-w-[160px]">

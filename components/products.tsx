@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 
 export const ProductsView: React.FC = () => {
   const products = [
@@ -35,19 +36,18 @@ export const ProductsView: React.FC = () => {
       <div className="flex-1 flex flex-col justify-center items-center"
         style={{ marginLeft: 280 }} >
         <div className="bg-white/30 p-6 rounded-2xl shadow-lg mb-6 w-auto max-w-md text-center items-center">
-        <img
-            className="block mx-auto"
-          src={products[currentProduct].image}
-          alt={products[currentProduct].name}
-          style={{
-            maxWidth: "60%",
-            maxHeight: "60vh",
-            marginBottom: 24,
-          }}
-        />
-        <h2 className="text-2xl font-bold mb-2">{products[currentProduct].name}</h2>
-        <p className="text-base text-gray-700 mb-2">{products[currentProduct].description}</p>
-        <span className="text-sm text-gray-500">{products[currentProduct].category}</span>
+          <div className="relative mx-auto mb-6 w-[60%] h-[40vh] min-h-[300px]">
+            <Image
+              src={products[currentProduct].image}
+              alt={products[currentProduct].name}
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{products[currentProduct].name}</h2>
+          <p className="text-base text-gray-700 mb-2">{products[currentProduct].description}</p>
+          <span className="text-sm text-gray-500">{products[currentProduct].category}</span>
         </div>
       </div>
       {/* Sağda ürün paleti */}
@@ -58,16 +58,15 @@ export const ProductsView: React.FC = () => {
             className={`flex flex-col items-center cursor-pointer p-3 rounded-xl ${currentProduct === idx ? "text-neutral-900" : "text-neutral-500"}`}
             onClick={() => handleProductClick(idx)}
           >
-            <img
-              src={product.image}
-              alt={product.name}
-              style={{
-                width: 48,
-                height: 48,
-                marginBottom: 6,
-                objectFit: "cover",
-              }}
-            />
+            <div className="relative w-12 h-12 mb-2">
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                className="object-cover rounded-md"
+                sizes="48px"
+              />
+            </div>
             <span className={`text-sm font-medium`}>{product.name}</span>
             <span className="text-xs">{product.category}</span>
           </div>

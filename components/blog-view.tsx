@@ -129,7 +129,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
 
                                 <div className="mt-8 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700">
                                     <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">
-                                        Bu içerik Filli Boya blogundan alınmıştır. Detaylı bilgi için filliboya.com'u ziyaret edebilirsiniz.
+                                        Bu içerik Filli Boya blogundan alınmıştır. Detaylı bilgi için filliboya.com&apos;u ziyaret edebilirsiniz.
                                     </p>
                                 </div>
                             </div>

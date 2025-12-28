@@ -13,6 +13,12 @@ const nextConfig = {
         port: "",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "www.filliboya.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };
