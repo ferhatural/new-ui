@@ -40,6 +40,7 @@ export const ColorsView: React.FC = () => {
             src={images[currentImg]}
             alt="Salon"
             fill
+            unoptimized
             onClick={handleImageClick}
             style={{
               cursor: "pointer",

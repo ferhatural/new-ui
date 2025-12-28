@@ -9,26 +9,38 @@ interface BlogViewProps {
 }
 
 export function BlogView({ posts = [] }: BlogViewProps) {
+    const [visibleCount, setVisibleCount] = useState(6);
     const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
+    const handleLoadMore = () => {
+        setVisibleCount(prev => prev + 6);
+    };
+
     // Function to handle post selection
     const handlePostClick = async (post: BlogPost) => {
+        // Set selected immediately to show modal
         setSelectedPost(post);
 
+        // If content is already present, no need to fetch
+        if (post.content) {
+            return;
+        }
+
         // If content is missing, fetch it
-        if (!post.content) {
-            setIsLoadingDetail(true);
-            try {
-                const detail = await fetchBlogDetail(post.id);
-                if (detail) {
-                    setSelectedPost(detail);
-                }
-            } catch (error) {
-                console.error("Failed to fetch detail:", error);
-            } finally {
-                setIsLoadingDetail(false);
+        setIsLoadingDetail(true);
+        try {
+            const detail = await fetchBlogDetail(post.id);
+            if (detail && detail.content) {
+                // Update the selected post with full details including content
+                setSelectedPost(detail);
+            } else {
+                console.warn("Detail fetch returned no content for id:", post.id);
             }
+        } catch (error) {
+            console.error("Failed to fetch detail:", error);
+        } finally {
+            setIsLoadingDetail(false);
         }
     };
 
@@ -40,14 +52,16 @@ export function BlogView({ posts = [] }: BlogViewProps) {
         );
     }
 
+    const visiblePosts = posts.slice(0, visibleCount);
+
     return (
         <div className="w-full h-full overflow-y-auto p-4 pb-24">
             <h2 className="text-2xl font-bold mb-6 text-zinc-800 dark:text-zinc-100 px-2 sticky top-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md py-4 z-10">
                 İlham Veren Fikirler
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {posts.map((post, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {visiblePosts.map((post, index) => (
                     <div
                         key={index}
                         className="group flex flex-col bg-white dark:bg-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-100 dark:border-zinc-700 cursor-pointer"
@@ -58,6 +72,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                                 src={post.main_image}
                                 alt={post.title}
                                 fill
+                                unoptimized
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             />
@@ -79,6 +94,17 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                 ))}
             </div>
 
+            {visibleCount < posts.length && (
+                <div className="flex justify-center pb-8">
+                    <button
+                        onClick={handleLoadMore}
+                        className="px-6 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors font-medium text-sm"
+                    >
+                        Daha Fazla Göster
+                    </button>
+                </div>
+            )}
+
             {/* Basic Modal for Detail View */}
             {selectedPost && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedPost(null)}>
@@ -91,6 +117,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                                 src={selectedPost.main_image}
                                 alt={selectedPost.title}
                                 fill
+                                unoptimized
                                 className="object-cover"
                             />
                             <button
@@ -103,7 +130,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                         <div className="p-6 md:p-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">{selectedPost.title}</h2>
                             <div className="prose dark:prose-invert max-w-none">
-                                <p className="text-lg text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                <p className="text-lg text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">
                                     {selectedPost.short_desc}
                                 </p>
 
@@ -119,12 +146,6 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                                         />
                                     )
                                 )}
-
-                                <div className="mt-8 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700">
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">
-                                        Bu içerik Filli Boya blogundan alınmıştır. Detaylı bilgi için filliboya.com&apos;u ziyaret edebilirsiniz.
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     </div>
