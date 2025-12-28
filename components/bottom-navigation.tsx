@@ -106,13 +106,13 @@ export function BottomNavigation({
 
                       <button
                         onClick={() => {
-                          handleAIResponse("show usage");
+                          handleAIResponse("ilham veren fikirler");
                           setIsMobileMenuOpen(false);
                         }}
                         className="inline-flex h-8 px-2 text-xs font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 whitespace-nowrap"
                       >
-                        <BarChart3 className="h-3 w-3 mr-1" />
-                        <span>Usage</span>
+                        <PencilLine className="h-3 w-3 mr-1" />
+                        <span>İlham</span>
                       </button>
 
                       <button
@@ -308,7 +308,7 @@ export function BottomNavigation({
                 </button>
 
                 <button
-                  onClick={() => handleAIResponse("show usage")}
+                  onClick={() => handleAIResponse("ilham veren fikirler")}
                   className="inline-flex h-10 px-3 text-sm font-medium items-center transition-opacity hover:opacity-60 focus:outline-none will-change-[opacity] rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
                   <PencilLine className="h-4 w-4 mr-2" />

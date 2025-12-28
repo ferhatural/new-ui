@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { fetchBlogDetail, BlogPost } from "@/lib/api";
 
 interface BlogPost {
     title: string;
@@ -16,6 +17,27 @@ interface BlogViewProps {
 
 export function BlogView({ posts = [] }: BlogViewProps) {
     const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+    // Function to handle post selection
+    const handlePostClick = async (post: BlogPost) => {
+        setSelectedPost(post);
+
+        // If content is missing, fetch it
+        if (!post.content) {
+            setIsLoadingDetail(true);
+            try {
+                const detail = await fetchBlogDetail(post.id);
+                if (detail) {
+                    setSelectedPost(detail);
+                }
+            } catch (error) {
+                console.error("Failed to fetch detail:", error);
+            } finally {
+                setIsLoadingDetail(false);
+            }
+        }
+    };
 
     if (posts.length === 0) {
         return (
@@ -36,7 +58,7 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                     <div
                         key={index}
                         className="group flex flex-col bg-white dark:bg-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-100 dark:border-zinc-700 cursor-pointer"
-                        onClick={() => setSelectedPost(post)}
+                        onClick={() => handlePostClick(post)}
                     >
                         <div className="relative h-48 w-full overflow-hidden">
                             <Image
@@ -91,7 +113,21 @@ export function BlogView({ posts = [] }: BlogViewProps) {
                                 <p className="text-lg text-zinc-700 dark:text-zinc-300 leading-relaxed">
                                     {selectedPost.short_desc}
                                 </p>
-                                <div className="mt-6 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700">
+
+                                {isLoadingDetail ? (
+                                    <div className="py-12 flex justify-center">
+                                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                ) : (
+                                    selectedPost.content && (
+                                        <div
+                                            className="mt-6 text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-4"
+                                            dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+                                        />
+                                    )
+                                )}
+
+                                <div className="mt-8 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-100 dark:border-zinc-700">
                                     <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">
                                         Bu içerik Filli Boya blogundan alınmıştır. Detaylı bilgi için filliboya.com'u ziyaret edebilirsiniz.
                                     </p>

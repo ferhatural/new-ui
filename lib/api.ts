@@ -1,8 +1,10 @@
 export interface BlogPost {
+    id: string;
     title: string;
     alias: string;
     short_desc: string;
     main_image: string;
+    content?: string;
 }
 
 export async function fetchBlogPosts(): Promise<BlogPost[]> {
@@ -30,5 +32,33 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
     } catch (error) {
         console.error("Error fetching blog posts:", error);
         return [];
+    }
+}
+
+export async function fetchBlogDetail(id: string): Promise<BlogPost | null> {
+    try {
+        const response = await fetch("https://filliboya.com/api.php", {
+            method: "POST",
+            body: JSON.stringify({ job: "get_blog_details", id }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch blog detail: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data || typeof data !== "object") {
+            console.error("Blog API returned invalid data:", data);
+            return null;
+        }
+
+        return data;
+
+    } catch (error) {
+        console.error("Error fetching blog detail:", error);
+        return null;
     }
 }
