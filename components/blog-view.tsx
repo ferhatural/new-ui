@@ -4,13 +4,6 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { fetchBlogDetail, BlogPost } from "@/lib/api";
 
-interface BlogPost {
-    title: string;
-    alias: string;
-    short_desc: string;
-    main_image: string;
-}
-
 interface BlogViewProps {
     posts?: BlogPost[];
 }
