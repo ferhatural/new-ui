@@ -90,6 +90,8 @@ export async function fetchPainters(): Promise<Painter[]> {
             throw new Error(`Failed to fetch painters: ${response.status}`);
         }
 
+        console.log('Painters API response:', response);
+
         const data = await response.json();
         // Validate if data is array
         if (!Array.isArray(data)) {
