@@ -83,6 +83,7 @@ export async function fetchPainters(): Promise<Painter[]> {
             body: JSON.stringify({ job: "search_painters_all", city: "128" }), // Defaulting to Istanbul (128)
             headers: {
                 "Content-Type": "application/json",
+                "Token": "ys1OBpUOIGezikKTQpuY1w02TrMbfixj"
             },
         });
 
