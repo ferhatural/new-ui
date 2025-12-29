@@ -65,3 +65,48 @@ export async function fetchBlogDetail(id: string): Promise<BlogPost | null> {
         return null;
     }
 }
+
+export interface Painter {
+    selected: boolean;
+    Name: string;
+    SurName: string;
+    ProfilePhotoLink: string;
+    ExperienceYear: string;
+    MasterPainterId: string;
+    badge: any;
+}
+
+export async function fetchPainters(): Promise<Painter[]> {
+    try {
+        const response = await fetch("https://api.filliustam.com/api.php", {
+            method: "POST",
+            body: JSON.stringify({ job: "search_painters_all", city: "128" }), // Defaulting to Istanbul (128)
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch painters: ${response.status}`);
+        }
+
+        const data = await response.json();
+        // Validate if data is array
+        if (!Array.isArray(data)) {
+            console.error("Painters API returned non-array data:", data);
+            return [];
+        }
+
+        // Process data to fix image URLs
+        return data.map((painter: any) => ({
+            ...painter,
+            ProfilePhotoLink: painter.ProfilePhotoLink
+                ? painter.ProfilePhotoLink.replace("../", "https://filliustam.com/")
+                : null
+        }));
+    } catch (error) {
+        console.error("Error fetching painters:", error);
+        return [];
+    }
+}
+

@@ -40,11 +40,12 @@ let hub: Hub = {
 };
 
 import { ALL_COLORS } from "@/lib/colors";
-import { fetchBlogPosts } from "@/lib/api";
+import { fetchBlogPosts, fetchPainters } from "@/lib/api";
 import { BlogView } from "@/components/blog-view";
+import { PainterView } from "@/components/painter-view";
 
 // Lightweight intent analysis to determine required context
-const analyzeIntent = async (query: string): Promise<{ needsProjects: boolean; needsColors: boolean; needsBlog: boolean }> => {
+const analyzeIntent = async (query: string): Promise<{ needsProjects: boolean; needsColors: boolean; needsBlog: boolean; needsPainters: boolean }> => {
   try {
     const result = await generateText({
       model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4o"),
@@ -54,11 +55,13 @@ Return a JSON object with:
 - "needsProjects": true if user asks about portfolio, case studies, specific project details, or client work.
 - "needsColors": true if user asks about paint colors, recommendations, suggestions for room painting, or specific color names.
 - "needsBlog": true if user asks for inspiration, ideas, blog posts, decoration tips, "ilham veren", "fikir", "garden", "flowers".
+- "needsPainters": true if user asks for painters, "boya ustası", "usta bul", "usta lazım".
 
 Examples:
 "Show me office projects" -> {"needsProjects": true, "needsColors": false, "needsBlog": false}
 "What color should I paint my dark room?" -> {"needsProjects": false, "needsColors": true, "needsBlog": false}
 "Give me some decoration ideas" -> {"needsProjects": false, "needsColors": false, "needsBlog": true}
+"Find me a painter" -> {"needsProjects": false, "needsColors": false, "needsBlog": false, "needsPainters": true}
 "Show me green projects" -> {"needsProjects": true, "needsColors": true, "needsBlog": false}
 
 Respond ONLY with valid JSON.`,
@@ -70,6 +73,7 @@ Respond ONLY with valid JSON.`,
       needsProjects: intent.needsProjects || false,
       needsColors: intent.needsColors || false,
       needsBlog: intent.needsBlog || false,
+      needsPainters: intent.needsPainters || false,
     };
   } catch (error) {
     console.error("Intent analysis failed:", error);
@@ -80,6 +84,7 @@ Respond ONLY with valid JSON.`,
       needsProjects: lowerQuery.includes("project") || lowerQuery.includes("proje") || lowerQuery.includes("ofis") || lowerQuery.includes("villa"),
       needsColors: lowerQuery.includes("color") || lowerQuery.includes("renk") || lowerQuery.includes("boya") || lowerQuery.includes("paint"),
       needsBlog: lowerQuery.includes("idea") || lowerQuery.includes("fikir") || lowerQuery.includes("blog") || lowerQuery.includes("ilham"),
+      needsPainters: lowerQuery.includes("usta") || lowerQuery.includes("boyacı") || lowerQuery.includes("painter"),
     };
   }
 };
@@ -172,6 +177,7 @@ AVAILABLE TOOLS:
 3. blog - "Ilham Veren Fikirler" (Inspiration Ideas). Contains blog titles, authors, dates, and content about decoration, flowers, home application etc.
 4. services - Services offered by Filliboya. Contains service names, descriptions, and images.
 5. contact - Contact information for Filliboya. Contains email, phone number, and address.
+6. painters - List of certified painters (Boya Ustası). Use this when user asks for "boya ustası", "usta bul", "boyacı lazım".
 
 CURRENT STATE: ${currentTool
         ? `Currently displaying: ${currentTool}`
@@ -181,7 +187,7 @@ CURRENT STATE: ${currentTool
 YOUR JOB: Analyze the user query and decide what action to take. Return a JSON object with:
 {
   "action": "show_tool" | "same_tool" | "text_only" | "show_project_detail" | "show_related_projects",
-  "tool": "colors" | "products" | "services" | "contact" | "blog" | "painter-services" | null,
+  "tool": "colors" | "products" | "services" | "contact" | "blog" | "painters" | null,
   "projectId": "string" | null,
   "relatedProjectIds": "string[]" | null,
   "response": "your response text here"
@@ -209,6 +215,7 @@ Query: "tell me about Filli Boya projects" + Current: null → {"action": "show_
 Query: "what is your email" + Current: null → {"action": "show_tool", "tool": "contacts", "projectId": null, "relatedProjectIds": null, "response": "You can find our contact information here"}
 Query: "show me green colors" (if colors in context) -> {"action": "text_only", "tool": "colors", "response": "Here are some green options: Kaktüs 90, Kaktüs 50..."}
 Query: "I need inspiration for my living room" -> {"action": "show_tool", "tool": "blog", "response": "Here are some inspiration ideas for your living room."}
+Query: "boya ustası lazım" -> {"action": "show_tool", "tool": "painters", "response": "Here are some certified painters near you."}
 Query: "what is AI" + Current: "cameras" → {"action": "text_only", "tool": null, "projectId": null, "relatedProjectIds": null, "response": "AI stands for Artificial Intelligence..."}
 
 Always respond with valid JSON only. No other text.`,
@@ -315,6 +322,10 @@ const sendMessage = async (
           const blogPosts = await fetchBlogPosts();
           toolComponent = <BlogView posts={blogPosts} />;
           break;
+        case "painters":
+            const painters = await fetchPainters();
+            toolComponent = <PainterView painters={painters} />;
+            break;
         default:
           toolComponent = <BlueText>{decision.response}</BlueText>;
       }
